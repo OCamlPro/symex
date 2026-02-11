@@ -50,6 +50,7 @@
     :with-test
     (>= 2.1)))
   ;; dev
+  (alcotest :with-test)
   (bisect_ppx
    (and
     (>= 2.5)

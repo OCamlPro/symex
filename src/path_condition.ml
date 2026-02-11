@@ -6,6 +6,8 @@ module Union_find = Union_find.Make (Smtml.Symbol)
 
 type t = Smtml.Expr.Set.t Union_find.t
 
+let pp : t Fmt.t = fun ppf pc -> (Union_find.pp Smtml.Expr.Set.pp) ppf pc
+
 let empty : t = Union_find.empty
 
 let add_one (condition : Smtml.Expr.t) pc : t =

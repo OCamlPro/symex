@@ -17,7 +17,7 @@ module type S = sig
 
   type key
 
-  val print : 'a Fmt.t -> 'a t Fmt.t
+  val pp : 'a Fmt.t -> 'a t Fmt.t
 
   val empty : 'a t
 
@@ -91,7 +91,7 @@ module Make (X : VariableType) : S with type key = X.t = struct
   let print_datum pp ppf { datum; _ } =
     Fmt.option ~none:(fun ppf () -> Fmt.pf ppf "<default>") pp ppf datum
 
-  let[@ocamlformat "disable"] print pp ppf { node_of_canonicals; _ } =
+  let[@ocamlformat "disable"] pp pp ppf { node_of_canonicals; _ } =
     Fmt.pf ppf
       "@[<hov 1>(\
        @[<hov 1>(aliases_of_canonicals@ %a)@]@ \

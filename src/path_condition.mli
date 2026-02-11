@@ -4,6 +4,8 @@
 
 type t
 
+val pp : t Fmt.t
+
 val empty : t
 
 val add : Smtml.Typed.Bool.t -> t -> t

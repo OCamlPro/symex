@@ -9,6 +9,7 @@ pkgs.mkShell {
   nativeBuildInputs = with pkgs.ocamlPackages; [
     dune_3
     findlib
+    alcotest
     bisect_ppx
     #landmarks
     #landmarks-ppx

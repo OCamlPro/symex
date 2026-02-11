@@ -23,6 +23,7 @@ depends: [
   "smtml" {>= "0.20.0"}
   "odoc" {>= "3.0.0" & with-doc}
   "mdx" {with-test & >= "2.1"}
+  "alcotest" {with-test}
   "bisect_ppx" {>= "2.5" & with-dev-setup}
   "landmarks-ppx" {with-dev-setup}
   "ocamlformat" {>= "0.28" & with-dev-setup}
