@@ -63,28 +63,17 @@ module Make (X : VariableType) : S with type key = X.t = struct
     }
 
   let print_set ppf set =
-    if SX.is_empty set then Fmt.pf ppf "{}"
-    else (
-      Fmt.pf ppf "@[<hov 1>{";
-      let first = ref true in
-      SX.iter
-        (fun x ->
-          if !first then first := false else Fmt.pf ppf ",@ ";
-          X.pp ppf x )
-        set;
-      Fmt.pf ppf "}@]" )
+    Fmt.pf ppf "@[<hov 1>{%a}@]"
+      (Fmt.iter ~sep:(fun ppf () -> Fmt.pf ppf ",@") SX.iter X.pp)
+      set
 
   let print_map pp ppf map =
-    if MX.is_empty map then Fmt.pf ppf "{}"
-    else (
-      Fmt.pf ppf "@[<hov 1>{";
-      let first = ref true in
-      MX.iter
-        (fun key value ->
-          if !first then first := false else Fmt.pf ppf ",@ ";
-          Fmt.pf ppf "@[<hov 1>(%a@ %a)@]" X.pp key pp value )
-        map;
-      Fmt.pf ppf "}@]" )
+    Fmt.pf ppf "@[<hov 1>{%a}@]"
+      (Fmt.iter_bindings
+         ~sep:(fun ppf () -> Fmt.pf ppf ",@ ")
+         MX.iter
+         (fun ppf (k, v) -> Fmt.pf ppf "@[<hov 1>(%a@ %a)@]" X.pp k pp v) )
+      map
 
   let print_aliases ppf { aliases; _ } = print_set ppf aliases
 

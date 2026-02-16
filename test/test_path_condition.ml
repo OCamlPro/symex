@@ -15,7 +15,12 @@ let print pc = Fmt.str "%a" Symex.Path_condition.pp pc
 let test_print_pc_empty () : unit =
   let pc = Symex.Path_condition.empty |> print in
   Alcotest.(check string)
-    "same string" "((aliases_of_canonicals {}) (payload_of_canonicals {}))" pc
+    "same string"
+    "union find:\n\
+    \  ((aliases_of_canonicals {}) (payload_of_canonicals {}))\n\
+     equalities:\n\
+    \  {}"
+    pc
 
 let test_print_pc_one () : unit =
   let pc =
@@ -25,8 +30,11 @@ let test_print_pc_one () : unit =
   in
   Alcotest.(check string)
     "same string"
-    "((aliases_of_canonicals {(x0 {})})\n\
-    \ (payload_of_canonicals {(x0 (bool.eq x0 42))}))"
+    "union find:\n\
+    \  ((aliases_of_canonicals {(x0 {})})\n\
+    \   (payload_of_canonicals {(x0 (bool.eq x0 42))}))\n\
+     equalities:\n\
+    \  {}"
     pc
 
 let test_print_pc_two () : unit =
@@ -38,8 +46,11 @@ let test_print_pc_two () : unit =
   in
   Alcotest.(check string)
     "same string"
-    "((aliases_of_canonicals {(x0 {}), (y0 {})})\n\
-    \ (payload_of_canonicals {(x0 (bool.eq x0 42)), (y0 (bool.eq y0 56))}))"
+    "union find:\n\
+    \  ((aliases_of_canonicals {(x0 {}), (y0 {})})\n\
+    \   (payload_of_canonicals {(x0 (bool.eq x0 42)), (y0 (bool.eq y0 56))}))\n\
+     equalities:\n\
+    \  {}"
     pc
 
 let test_print_pc_one_two_sym () : unit =
@@ -50,8 +61,11 @@ let test_print_pc_one_two_sym () : unit =
   in
   Alcotest.(check string)
     "same string"
-    "((aliases_of_canonicals {(x0 {y0})})\n\
-    \ (payload_of_canonicals {(x0 (bool.eq x0 y0))}))"
+    "union find:\n\
+    \  ((aliases_of_canonicals {(x0 {y0})})\n\
+    \   (payload_of_canonicals {(x0 (bool.eq x0 y0))}))\n\
+     equalities:\n\
+    \  {}"
     pc
 
 let basics_suite =

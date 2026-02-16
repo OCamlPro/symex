@@ -2,18 +2,49 @@
 (* Copyright © 2021-2024 OCamlPro *)
 (* Written by the Owi programmers *)
 
-module Union_find = Union_find.Make (Smtml.Symbol)
+module Union_find = struct
+  include Union_find.Make (Smtml.Symbol)
 
-type union_find = Smtml.Expr.Set.t Union_find.t
+  type nonrec t = Smtml.Expr.Set.t t
 
-type t = { union_find : union_find }
+  let pp : t Fmt.t = fun ppf union_find -> pp Smtml.Expr.Set.pp ppf union_find
+end
+
+module Equalities : sig
+  type t
+
+  val empty : t
+
+  val pp : t Fmt.t
+end = struct
+  type t = Smtml.Value.t Smtml.Symbol.Map.t
+
+  let empty = Smtml.Symbol.Map.empty
+
+  let pp ppf v =
+    Fmt.pf ppf "@[<hov 1>{%a}@]"
+      (Fmt.iter_bindings
+         ~sep:(fun ppf () -> Fmt.pf ppf ",@ ")
+         Smtml.Symbol.Map.iter
+         (fun ppf (k, v) ->
+           Fmt.pf ppf "%a = %a" Smtml.Symbol.pp k Smtml.Value.pp v ) )
+      v
+end
+
+type t =
+  { union_find : Union_find.t
+  ; equalities : Equalities.t
+  }
 
 let pp : t Fmt.t =
- fun ppf { union_find } -> (Union_find.pp Smtml.Expr.Set.pp) ppf union_find
+ fun ppf { union_find; equalities } ->
+  Fmt.pf ppf "union find:@\n  @[<v>%a@]@\nequalities:@\n  @[<v>%a@]"
+    Union_find.pp union_find Equalities.pp equalities
 
 let empty : t =
   let union_find = Union_find.empty in
-  { union_find }
+  let equalities = Equalities.empty in
+  { union_find; equalities }
 
 let add_one (condition : Smtml.Expr.t) (pc : t) : t =
   match Smtml.Expr.get_symbols [ condition ] with
@@ -31,7 +62,8 @@ let add_one (condition : Smtml.Expr.t) (pc : t) : t =
           , sym ) )
         (union_find, hd) tl
     in
-    { union_find }
+    let equalities = pc.equalities in
+    { union_find; equalities }
   | [] ->
     (* It means smtml did not properly simplified an expression! *)
     assert false
