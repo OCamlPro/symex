@@ -13,7 +13,7 @@ pkgs.mkShell {
     bisect_ppx
     #landmarks
     #landmarks-ppx
-    mdx
+    #mdx
     merlin
     ocaml
     ocamlformat
