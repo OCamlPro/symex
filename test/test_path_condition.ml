@@ -19,7 +19,8 @@ let test_print_pc_empty () : unit =
     "union find:\n\
     \  ((aliases_of_canonicals {}) (payload_of_canonicals {}))\n\
      equalities:\n\
-    \  {}"
+    \  {}\n\
+     is_unsat: false"
     pc
 
 let test_print_pc_one () : unit =
@@ -31,10 +32,10 @@ let test_print_pc_one () : unit =
   Alcotest.(check string)
     "same string"
     "union find:\n\
-    \  ((aliases_of_canonicals {(x0 {})})\n\
-    \   (payload_of_canonicals {(x0 (bool.eq x0 42))}))\n\
+    \  ((aliases_of_canonicals {}) (payload_of_canonicals {}))\n\
      equalities:\n\
-    \  {}"
+    \  {x0 = 42}\n\
+     is_unsat: false"
     pc
 
 let test_print_pc_two () : unit =
@@ -47,10 +48,10 @@ let test_print_pc_two () : unit =
   Alcotest.(check string)
     "same string"
     "union find:\n\
-    \  ((aliases_of_canonicals {(x0 {}), (y0 {})})\n\
-    \   (payload_of_canonicals {(x0 (bool.eq x0 42)), (y0 (bool.eq y0 56))}))\n\
+    \  ((aliases_of_canonicals {}) (payload_of_canonicals {}))\n\
      equalities:\n\
-    \  {}"
+    \  {x0 = 42, y0 = 56}\n\
+     is_unsat: false"
     pc
 
 let test_print_pc_one_two_sym () : unit =
@@ -65,7 +66,8 @@ let test_print_pc_one_two_sym () : unit =
     \  ((aliases_of_canonicals {(x0 {y0})})\n\
     \   (payload_of_canonicals {(x0 (bool.eq x0 y0))}))\n\
      equalities:\n\
-    \  {}"
+    \  {}\n\
+     is_unsat: false"
     pc
 
 let basics_suite =
@@ -106,9 +108,10 @@ let test_slice_on_symbol_transitive () =
   let slice =
     let x0 = sym_i32 "x0" in
     let y0 = i32_sym "y0" in
+    let z0 = i32_sym "z0" in
     Symex.Path_condition.empty
     |> Symex.Path_condition.add (eq (Smtml.Typed.Bitv32.symbol x0) y0)
-    |> Symex.Path_condition.add (eq y0 (i32_const 5l))
+    |> Symex.Path_condition.add (eq y0 z0)
     |> Symex.Path_condition.slice_on_symbol x0
   in
   Alcotest.(check int)
@@ -136,10 +139,14 @@ let test_slice_on_condition_basic () =
 
 let test_slice_on_condition_transitive () =
   let slice =
-    let c1 = eq (i32_sym "x0") (i32_sym "y0") in
+    let x0 = i32_sym "x0" in
+    let y0 = i32_sym "y0" in
+    let z0 = i32_sym "z0" in
+    let c1 = eq x0 y0 in
+    let c2 = eq y0 z0 in
     Symex.Path_condition.empty
     |> Symex.Path_condition.add c1
-    |> Symex.Path_condition.add (eq (i32_sym "y0") (i32_const 7l))
+    |> Symex.Path_condition.add c2
     |> Symex.Path_condition.slice_on_condition c1
   in
   Alcotest.(check int) "transitive slice size" 2 (Smtml.Expr.Set.cardinal slice)
@@ -170,7 +177,7 @@ let test_slice_connected () =
   let slices =
     Symex.Path_condition.empty
     |> Symex.Path_condition.add (eq (i32_sym "x0") (i32_sym "y0"))
-    |> Symex.Path_condition.add (eq (i32_sym "y0") (i32_const 3l))
+    |> Symex.Path_condition.add (eq (i32_sym "y0") (i32_sym "z0"))
     |> Symex.Path_condition.slice
   in
   Alcotest.(check int) "one connected slice" 1 (List.length slices)

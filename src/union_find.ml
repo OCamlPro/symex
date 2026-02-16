@@ -38,6 +38,8 @@ module type S = sig
       [key] does not need to be canonical. *)
   val find_opt : key -> 'a t -> 'a option
 
+  val find_and_remove_opt : key -> 'a t -> ('a * 'a t) option
+
   (** [union ~merge key1 key2 uf] merges the equivalence classes associated with
       [key1] and [key2], calling [merge] on the corresponding values. *)
   val union : merge:('a -> 'a -> 'a) -> key -> key -> 'a t -> 'a t
@@ -125,6 +127,28 @@ module Make (X : VariableType) : S with type key = X.t = struct
     Option.bind
       (find_node_opt (find_canonical variable t) t)
       (fun node -> node.datum)
+
+  let find_and_remove_opt variable t =
+    let canonical = find_canonical variable t in
+    match find_node_opt canonical t with
+    | None -> None
+    | Some node -> (
+      match node.datum with
+      | None -> None
+      | Some datum ->
+        let node_of_canonicals = MX.remove canonical t.node_of_canonicals in
+        let canonical_elements =
+          MX.filter (fun _k v -> v <> canonical) t.canonical_elements
+        in
+        let t = { canonical_elements; node_of_canonicals } in
+        Some (datum, t) )
+
+  (*
+  type 'a t =
+    { canonical_elements : X.t MX.t
+    ; node_of_canonicals : 'a node MX.t
+    }
+ *)
 
   let set_canonical_element aliases canonical canonical_elements =
     SX.fold
