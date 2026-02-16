@@ -17,3 +17,5 @@ val slice_on_symbol : Smtml.Symbol.t -> t -> Smtml.Expr.Set.t
 val slice_on_condition : Smtml.Typed.Bool.t -> t -> Smtml.Expr.Set.t
 
 val slice : t -> Smtml.Expr.Set.t list
+
+val is_unsat : t -> bool

@@ -164,3 +164,5 @@ let slice_on_condition (c : Smtml.Typed.Bool.t) (pc : t) : Smtml.Expr.Set.t =
   | [] ->
     (* It means smtml did not properly simplified a expression! *)
     assert false
+
+let is_unsat pc = pc.is_unsat
