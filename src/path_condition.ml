@@ -115,10 +115,37 @@ and add_one_constraint (condition : Smtml.Expr.t) (pc : t) : t =
         assert false
     end
 
-let add (condition : Smtml.Typed.Bool.t) (pc : t) : t =
+let add_already_checked (condition : Smtml.Typed.Bool.t) (pc : t) : t =
   (* we start by splitting the condition ((P & Q) & R) into a set {P; Q; R} before adding each of P, Q and R into the UF data structure, this way we maximize the independence of the PC *)
   let splitted_condition = Smtml.Typed.Bool.split_conjunctions condition in
   Smtml.Expr.Set.fold add_one_constraint splitted_condition pc
+
+let add_one (condition : Smtml.Expr.t) (pc : t) : t =
+  match Smtml.Expr.get_symbols [ condition ] with
+  | hd :: tl ->
+    (* We add the first symbol to the UF *)
+    let union_find =
+      let c = Smtml.Expr.Set.singleton condition in
+      Union_find.add ~merge:Smtml.Expr.Set.union hd c pc.union_find
+    in
+    (* We union-ize all symbols together, starting with the first one that has already been added *)
+    let union_find, _last_sym =
+      List.fold_left
+        (fun (union_find, last_sym) sym ->
+          ( Union_find.union ~merge:Smtml.Expr.Set.union last_sym sym union_find
+          , sym ) )
+        (union_find, hd) tl
+    in
+    let equalities = pc.equalities in
+    { union_find; equalities; is_unsat = pc.is_unsat }
+  | [] ->
+    (* It means smtml did not properly simplified an expression! *)
+    assert false
+
+let add (condition : Smtml.Typed.Bool.t) (pc : t) : t =
+  (* we start by splitting the condition ((P & Q) & R) into a set {P; Q; R} before adding each of P, Q and R into the UF data structure, this way we maximize the independence of the PC *)
+  let splitted_condition = Smtml.Typed.Bool.split_conjunctions condition in
+  Smtml.Expr.Set.fold add_one splitted_condition pc
 
 (* Get all sub conditions of the path condition as a list of independent sets of constraints. *)
 let slice (pc : t) =

@@ -32,9 +32,10 @@ let test_print_pc_one () : unit =
   Alcotest.(check string)
     "same string"
     "union find:\n\
-    \  ((aliases_of_canonicals {}) (payload_of_canonicals {}))\n\
+    \  ((aliases_of_canonicals {(x0 {})})\n\
+    \   (payload_of_canonicals {(x0 (bool.eq x0 42))}))\n\
      equalities:\n\
-    \  {x0 = 42}\n\
+    \  {}\n\
      is_unsat: false"
     pc
 
@@ -48,9 +49,10 @@ let test_print_pc_two () : unit =
   Alcotest.(check string)
     "same string"
     "union find:\n\
-    \  ((aliases_of_canonicals {}) (payload_of_canonicals {}))\n\
+    \  ((aliases_of_canonicals {(x0 {}), (y0 {})})\n\
+    \   (payload_of_canonicals {(x0 (bool.eq x0 42)), (y0 (bool.eq y0 56))}))\n\
      equalities:\n\
-    \  {x0 = 42, y0 = 56}\n\
+    \  {}\n\
      is_unsat: false"
     pc
 
