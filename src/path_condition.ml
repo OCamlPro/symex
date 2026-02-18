@@ -51,36 +51,42 @@ let rec add_one_equality symbol value (pc : t) : t =
   | Some (set, union_find) ->
     (* propagate back the equality in the union find *)
     let pc = { pc with union_find; equalities } in
-    Smtml.Expr.Set.fold add_one_constraint set pc
+    Smtml.Expr.Set.fold (add_one_constraint ~propagate:true) set pc
   | None -> { pc with equalities }
 
-and add_one_constraint (condition : Smtml.Expr.t) (pc : t) : t =
+and add_one_constraint ~propagate (condition : Smtml.Expr.t) (pc : t) : t =
   (* we start by simplifying the constraint by substituting already known equalities *)
   let condition = Smtml.Expr.inline_symbol_values pc.equalities condition in
   let condition = Smtml.Expr.simplify condition in
   let pc, shortcut =
-    match Smtml.Expr.view condition with
-    (* if the condition is of the form e1 = e2 *)
-    | Relop (_, Smtml.Ty.Relop.Eq, e1, e2) -> begin
-      match (Smtml.Expr.view e1, Smtml.Expr.view e2) with
-      (* it has the form: symbol = value *)
-      | Smtml.Expr.Symbol symbol, Val value | Val value, Symbol symbol -> begin
-        match Smtml.Symbol.Map.find_opt symbol pc.equalities with
-        | None ->
-          (* we don't have an equality for s=v so we add it *)
-          (add_one_equality symbol value pc, true)
-        | Some value' ->
-          if not (Smtml.Value.equal value value') then
-            (* we have a symbol that is equal to two distinct values
+    if not propagate then
+      (* TODO: we probably do a little bit more here, for instance, detecting unsat quickly in some cases *)
+      (pc, false)
+    else
+      match Smtml.Expr.view condition with
+      (* if the condition is of the form e1 = e2 *)
+      | Relop (_, Smtml.Ty.Relop.Eq, e1, e2) -> begin
+        match (Smtml.Expr.view e1, Smtml.Expr.view e2) with
+        (* it has the form: symbol = value *)
+        | Smtml.Expr.Symbol symbol, Val value | Val value, Symbol symbol ->
+          begin
+          match Smtml.Symbol.Map.find_opt symbol pc.equalities with
+          | None ->
+            (* we don't have an equality for s=v so we add it *)
+            (add_one_equality symbol value pc, true)
+          | Some value' ->
+            (* TODO: this is currently wrong for instance with NaN *)
+            if not (Smtml.Value.equal value value') then
+              (* we have a symbol that is equal to two distinct values
                                  thus the whole PC is unsat *)
-            ({ pc with is_unsat = true }, true)
-          else
-            (* we discovered an only known equality, nothing to do *)
-            (pc, true)
+              ({ pc with is_unsat = true }, true)
+            else
+              (* we discovered an only known equality, nothing to do *)
+              (pc, true)
+        end
+        | _ -> (pc, false)
       end
       | _ -> (pc, false)
-    end
-    | _ -> (pc, false)
   in
 
   if shortcut then pc
@@ -115,37 +121,16 @@ and add_one_constraint (condition : Smtml.Expr.t) (pc : t) : t =
         assert false
     end
 
-let add_already_checked (condition : Smtml.Typed.Bool.t) (pc : t) : t =
+let add_aux ~propagate (condition : Smtml.Typed.Bool.t) (pc : t) : t =
   (* we start by splitting the condition ((P & Q) & R) into a set {P; Q; R} before adding each of P, Q and R into the UF data structure, this way we maximize the independence of the PC *)
   let splitted_condition = Smtml.Typed.Bool.split_conjunctions condition in
-  Smtml.Expr.Set.fold add_one_constraint splitted_condition pc
-
-let add_one (condition : Smtml.Expr.t) (pc : t) : t =
-  match Smtml.Expr.get_symbols [ condition ] with
-  | hd :: tl ->
-    (* We add the first symbol to the UF *)
-    let union_find =
-      let c = Smtml.Expr.Set.singleton condition in
-      Union_find.add ~merge:Smtml.Expr.Set.union hd c pc.union_find
-    in
-    (* We union-ize all symbols together, starting with the first one that has already been added *)
-    let union_find, _last_sym =
-      List.fold_left
-        (fun (union_find, last_sym) sym ->
-          ( Union_find.union ~merge:Smtml.Expr.Set.union last_sym sym union_find
-          , sym ) )
-        (union_find, hd) tl
-    in
-    let equalities = pc.equalities in
-    { union_find; equalities; is_unsat = pc.is_unsat }
-  | [] ->
-    (* It means smtml did not properly simplified an expression! *)
-    assert false
+  Smtml.Expr.Set.fold (add_one_constraint ~propagate) splitted_condition pc
 
 let add (condition : Smtml.Typed.Bool.t) (pc : t) : t =
-  (* we start by splitting the condition ((P & Q) & R) into a set {P; Q; R} before adding each of P, Q and R into the UF data structure, this way we maximize the independence of the PC *)
-  let splitted_condition = Smtml.Typed.Bool.split_conjunctions condition in
-  Smtml.Expr.Set.fold add_one splitted_condition pc
+  add_aux ~propagate:false condition pc
+
+let add_already_checked (condition : Smtml.Typed.Bool.t) (pc : t) : t =
+  add_aux ~propagate:true condition pc
 
 (* Get all sub conditions of the path condition as a list of independent sets of constraints. *)
 let slice (pc : t) =
