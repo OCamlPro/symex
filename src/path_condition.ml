@@ -74,15 +74,14 @@ and add_one_constraint ~propagate (condition : Smtml.Expr.t) (pc : t) : t =
           | None ->
             (* we don't have an equality for s=v so we add it *)
             (add_one_equality symbol value pc, true, condition)
-          | Some value' ->
-            (* TODO: this is currently wrong for instance with NaN *)
-            if not (Smtml.Value.equal value value') then
-              (* we have a symbol that is equal to two distinct values
-                                 thus the whole PC is unsat *)
-              ({ pc with is_unsat = true }, true, condition)
-            else
-              (* we discovered an only known equality, nothing to do *)
+          | Some value' -> begin
+            if Smtml.Eval.relop symbol.ty Eq value value' then
+              (* we discovered an already known equality, nothing to do *)
               (pc, true, condition)
+            else
+              (* we have a symbol that is equal to two distinct values thus the whole PC is unsat *)
+              ({ pc with is_unsat = true }, true, condition)
+          end
         end
         | _ -> (pc, false, condition)
       end
