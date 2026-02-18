@@ -55,14 +55,14 @@ let rec add_one_equality symbol value (pc : t) : t =
   | None -> { pc with equalities }
 
 and add_one_constraint ~propagate (condition : Smtml.Expr.t) (pc : t) : t =
-  (* we start by simplifying the constraint by substituting already known equalities *)
-  let condition = Smtml.Expr.inline_symbol_values pc.equalities condition in
-  let condition = Smtml.Expr.simplify condition in
-  let pc, shortcut =
+  let pc, shortcut, condition =
     if not propagate then
       (* TODO: we probably do a little bit more here, for instance, detecting unsat quickly in some cases *)
-      (pc, false)
+      (pc, false, condition)
     else
+      (* we start by simplifying the constraint by substituting already known equalities *)
+      let condition = Smtml.Expr.inline_symbol_values pc.equalities condition in
+      let condition = Smtml.Expr.simplify condition in
       match Smtml.Expr.view condition with
       (* if the condition is of the form e1 = e2 *)
       | Relop (_, Smtml.Ty.Relop.Eq, e1, e2) -> begin
@@ -73,20 +73,20 @@ and add_one_constraint ~propagate (condition : Smtml.Expr.t) (pc : t) : t =
           match Smtml.Symbol.Map.find_opt symbol pc.equalities with
           | None ->
             (* we don't have an equality for s=v so we add it *)
-            (add_one_equality symbol value pc, true)
+            (add_one_equality symbol value pc, true, condition)
           | Some value' ->
             (* TODO: this is currently wrong for instance with NaN *)
             if not (Smtml.Value.equal value value') then
               (* we have a symbol that is equal to two distinct values
                                  thus the whole PC is unsat *)
-              ({ pc with is_unsat = true }, true)
+              ({ pc with is_unsat = true }, true, condition)
             else
               (* we discovered an only known equality, nothing to do *)
-              (pc, true)
+              (pc, true, condition)
         end
-        | _ -> (pc, false)
+        | _ -> (pc, false, condition)
       end
-      | _ -> (pc, false)
+      | _ -> (pc, false, condition)
   in
 
   if shortcut then pc
