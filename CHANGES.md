@@ -1,5 +1,7 @@
 ## unreleased
 
+## 0.2 - 2026-03-04
+
 - new API for `Path_condition` which makes enforcing invariants easier
 - expose `Path_condition.pp`
 - substitute equalities in the path condition
