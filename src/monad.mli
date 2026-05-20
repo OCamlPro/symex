@@ -7,8 +7,7 @@ module Schedulable : sig
     | Choice of ('a, 'err, 'prio) t * ('a, 'err, 'prio) t
 end
 
-type ('a, 'err, 'prio, 'state) t =
-  'state -> ('a * 'state, 'err, 'prio) Schedulable.t
+type ('a, 'err, 'prio, 'state) t
 
 (* Monadic boilerplate *)
 
