@@ -59,11 +59,11 @@ and add_one_constraint (condition : Smtml.Expr.t) (pc : t) : t =
   let pc, shortcut =
     match Smtml.Expr.view condition with
     (* if the condition is of the form e1 = e2 *)
-    | Relop (_, Smtml.Ty.Relop.Eq, e1, e2) -> begin
-      match (Smtml.Expr.view e1, Smtml.Expr.view e2) with
+    | Relop (_, Smtml.Ty.Relop.Eq, e1, e2) ->
+      begin match (Smtml.Expr.view e1, Smtml.Expr.view e2) with
       (* it has the form: symbol = value *)
-      | Smtml.Expr.Symbol symbol, Val value | Val value, Symbol symbol -> begin
-        match Smtml.Symbol.Map.find_opt symbol pc.equalities with
+      | Smtml.Expr.Symbol symbol, Val value | Val value, Symbol symbol ->
+        begin match Smtml.Symbol.Map.find_opt symbol pc.equalities with
         | None ->
           (* we don't have an equality for s=v so we add it *)
           (add_one_equality symbol value pc, true)
@@ -72,9 +72,9 @@ and add_one_constraint (condition : Smtml.Expr.t) (pc : t) : t =
           assert (Smtml.Eval.relop symbol.ty Eq value value');
           (* we discovered an already known equality, nothing to do *)
           (pc, true)
-      end
+        end
       | _ -> (pc, false)
-    end
+      end
     | _ -> (pc, false)
   in
 
@@ -87,8 +87,8 @@ and add_one_constraint (condition : Smtml.Expr.t) (pc : t) : t =
     | Val False ->
       (* the PC is unsat *)
       assert false
-    | _ -> begin
-      match Smtml.Expr.get_symbols [ condition ] with
+    | _ ->
+      begin match Smtml.Expr.get_symbols [ condition ] with
       | hd :: tl ->
         (* We add the first symbol to the UF *)
         let union_find =
@@ -108,7 +108,7 @@ and add_one_constraint (condition : Smtml.Expr.t) (pc : t) : t =
       | [] ->
         (* either it is a boolean value (because it is a condition) and was matched before, either it's not a value and should have at least one symbol!  *)
         assert false
-    end
+      end
 
 let add_checked_sat_condition (condition : Smtml.Typed.Bool.t) (pc : t) : t =
   (* we start by splitting the condition ((P & Q) & R) into a set {P; Q; R} before adding each of P, Q and R into the UF data structure, this way we maximize the independence of the PC *)

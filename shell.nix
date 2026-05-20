@@ -4,6 +4,7 @@
 }:
 
 let
+  /*
   smtml = pkgs.ocamlPackages.smtml.overrideAttrs (old: {
     src = pkgs.fetchFromGitHub {
       owner = "formalsec";
@@ -13,6 +14,7 @@ let
     };
     doCheck = false;
   });
+  */
 in
 
 pkgs.mkShell {
@@ -33,6 +35,7 @@ pkgs.mkShell {
     ocp-index
     ocb
     odoc
+    alcotest
   ];
   buildInputs = with pkgs.ocamlPackages; [
     fmt

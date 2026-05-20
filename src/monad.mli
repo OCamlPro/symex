@@ -1,16 +1,13 @@
 module Schedulable : sig
-  type ('a, 'prio) t = private
+  type ('a, 'err, 'prio) t = private
     | Prune
-    | Now of 'a
-    | Yield of 'prio * (unit -> ('a, 'prio) t)
-    | Choice of ('a, 'prio) t * ('a, 'prio) t
+    | Ok of 'a
+    | Error of 'err
+    | Yield of 'prio * (unit -> ('a, 'err, 'prio) t)
+    | Choice of ('a, 'err, 'prio) t * ('a, 'err, 'prio) t
 end
 
-module State : sig
-  type ('a, 'prio, 'state) t = 'state -> ('a * 'state, 'prio) Schedulable.t
-end
-
-type ('a, 'err, 'prio, 'state) t = (('a, 'err) result, 'prio, 'state) State.t
+type ('a, 'err, 'prio, 'state) t
 
 (* Monadic boilerplate *)
 
@@ -34,11 +31,9 @@ val ( let+ ) :
 
 (* State *)
 
-val modify_state : ('state -> 'state) -> (unit, 'err, 'prio, 'state) t
+val map_state : ('state -> 'state) -> (unit, 'err, 'prio, 'state) t
 
-val set_state : 'state -> (unit, 'err, 'prio, 'state) t
-
-val state : unit -> ('state, 'err, 'prio, 'state) t
+val fold_state : ('state -> 'a) -> ('a, 'err, 'prio, 'state) t
 
 (* Symbolic execution *)
 
@@ -61,4 +56,4 @@ val yield : 'prio -> (unit, 'err, 'prio, 'state) t
 val run :
      ('a, 'err, 'prio, 'state) t
   -> 'state
-  -> (('a, 'err) result * 'state, 'prio) Schedulable.t
+  -> ('a * 'state, 'err, 'prio) Schedulable.t
