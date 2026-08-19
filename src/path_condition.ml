@@ -2,7 +2,7 @@
 (* Copyright © 2021-2024 OCamlPro *)
 (* Written by the Owi programmers *)
 
-exception Unsat
+exception Unsat of Smtml.Expr.t
 
 module Union_find = struct
   include Union_find.Make (Smtml.Symbol)
@@ -71,7 +71,7 @@ and add_one_constraint (condition : Smtml.Expr.t) (pc : t) : t =
           (add_one_equality symbol value pc, true)
         | Some value' ->
           if not (Smtml.Eval.relop symbol.ty Eq value value') then
-            raise Unsat;
+            raise (Unsat condition);
           (pc, true)
         end
       | _ -> (pc, false)
@@ -87,7 +87,7 @@ and add_one_constraint (condition : Smtml.Expr.t) (pc : t) : t =
       pc
     | Val False ->
       (* the PC is unsat *)
-      raise Unsat
+      raise (Unsat condition)
     | _ ->
       begin match Smtml.Expr.get_symbols [ condition ] with
       | hd :: tl ->

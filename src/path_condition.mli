@@ -2,7 +2,7 @@
 (* Copyright © 2021-2024 OCamlPro *)
 (* Written by the Owi programmers *)
 
-exception Unsat
+exception Unsat of Smtml.Expr.t
 
 type t
 
