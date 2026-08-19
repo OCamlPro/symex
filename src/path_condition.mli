@@ -2,6 +2,8 @@
 (* Copyright © 2021-2024 OCamlPro *)
 (* Written by the Owi programmers *)
 
+exception Unsat
+
 type t
 
 val pp : t Fmt.t
