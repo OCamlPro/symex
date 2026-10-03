@@ -2,7 +2,7 @@
 
 let i32_const n = Smtml.Typed.Bitv32.of_int32 n
 
-let sym_i32 name = Smtml.Symbol.make (Smtml.Ty.Ty_bitv 32) name
+let sym_i32 name = Smtml.Symbol.make_const (Smtml.Ty.Ty_bitv 32) name
 
 let i32_sym name = Smtml.Typed.Bitv32.symbol @@ sym_i32 name
 

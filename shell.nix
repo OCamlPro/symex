@@ -4,17 +4,16 @@
 }:
 
 let
-  /*
   smtml = pkgs.ocamlPackages.smtml.overrideAttrs (old: {
+    version = "0.31.0";
     src = pkgs.fetchFromGitHub {
       owner = "formalsec";
       repo = "smtml";
-      rev = "a9dff52e7ef2215c786ee8ce2c24d716db0b5ace";
-      hash = "sha256-TIOOE/bsis6oYV3Dt6TcI/r/aN3S1MQNtxDAnvBbVO0=";
+      rev = "v0.31.0";
+      hash = "sha256-w/mEDIDydZ2xgTsMx/fbA+VxU8OlcAbOUMTogDQa5jo=";
     };
     doCheck = false;
   });
-  */
 in
 
 pkgs.mkShell {

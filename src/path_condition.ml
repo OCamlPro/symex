@@ -37,6 +37,10 @@ let pp : t Fmt.t =
   Fmt.pf ppf "union find:@\n  @[<v>%a@]@\nequalities:@\n  @[<v>%a@]@\n"
     Union_find.pp union_find Equalities.pp equalities
 
+let symbol_eq_value symbol value : Smtml.Expr.t =
+  Smtml.Expr.relop Ty_bool Eq (Smtml.Expr.symbol symbol)
+    (Smtml.Expr.value value)
+
 let empty : t =
   let union_find = Union_find.empty in
   let equalities = Smtml.Symbol.Map.empty in
@@ -121,12 +125,7 @@ let to_list (pc : t) =
   (* add equalities too *)
   Smtml.Symbol.Map.fold
     (fun symbol value acc ->
-      let eq =
-        Smtml.Expr.Bool.equal (Smtml.Expr.symbol symbol)
-          (Smtml.Expr.value value)
-        |> Smtml.Expr.Set.singleton
-      in
-      eq :: acc )
+      Smtml.Expr.Set.singleton (symbol_eq_value symbol value) :: acc )
     pc.equalities uf
 
 (* Return the set of constraints from [pc] that are relevant for [sym]. *)
@@ -135,11 +134,7 @@ let slice_on_symbol (sym : Smtml.Symbol.t) (pc : t) : Smtml.Expr.Set.t =
   | Some s -> s
   | None -> (
     match Smtml.Symbol.Map.find_opt sym pc.equalities with
-    | Some value ->
-      let eq =
-        Smtml.Expr.Bool.equal (Smtml.Expr.symbol sym) (Smtml.Expr.value value)
-      in
-      Smtml.Expr.Set.singleton eq
+    | Some value -> Smtml.Expr.Set.singleton (symbol_eq_value sym value)
     | None -> Smtml.Expr.Set.empty )
 
 (* Return the set of constraints from [pc] that are relevant for [c]. *)
